@@ -1,0 +1,178 @@
+---
+title: "Draft Exploratory Analysis"
+author: "Brooke Banning"
+date: "2023-11-01"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=FALSE}
+# Load packages
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(skimr)
+library(httr)
+library(tidyverse)
+library(rvest)
+library(dplyr)
+library(knitr)
+library(stringr)
+library(pander)
+library(openxlsx)
+
+# Load data
+load("Clean/merged_data.RData")
+migration_clean <- read.csv("Clean/migration_clean.csv")
+```
+
+## Topic, Motivation, and Description of Data
+### Motivations:
+Water has always been a hot topic in Colorado. Being a dry state, yearly snowfall and rainfall influence water availability for the year and can harm agricultural production, recreation, industry, and municipalities. With Colorado’s population increasing, the state’s water supply and demand have been a growing concern. This project aims to shed light on Colorado’s water use and how it relates to migration rates.
+
+### Potential Research Questions:
+1. How do migration inflows affect municipal water use?
+2. Will the amount of water used for irrigation change based on increased municipal demand?
+3. Based on historical municipal use data, can we predict future water use? Do these predicted values align with Colorado’s supply?
+
+### Data:
+
+* https://waterdata.usgs.gov/co/nwis/water_use?format=html_table&rdb_compression=file&wu_area=County&wu_year=ALL&wu_county=ALL&wu_category=ALL&wu_county_nms=--ALL%2BCounties--&wu_category_nms=--ALL%2BCategories--
+  + This data set describes different types of water use in Colorado broken up by county. The observations range from 1985 to 2015 in 5-year intervals. Variables include total water use, public supply population served by groundwater, public supply population served by surface water,  public supply total self-supplied groundwater, surface water withdrawals,  public supply per capita use in gallons per person in each day, public supply public use and loses, public supply reclaimed wastewater, public supply number of facilities, domestic self-supplied groundwater and surface water withdrawals, commercial total self-supplied withdrawals, industrial total self-supplied withdrawals, total thermoelectric power total self-supplied withdrawals and many more.
+  
+* https://www.irs.gov/statistics/soi-tax-stats-migration-data
+  + This website contains multiple downloadable data sets that provide migration information by county from 1990 to 2021. For both migration inflows and outflows, variables include number of returns filed (which approximates the number of households that migrated), number of personal exemptions claimed (which approximates the number of individuals), and total adjusted gross income (starting with Filing Year 1995).
+
+
+
+## Data
+### USGS Data Processing
+For our water use data, we took advantage of the USGS website. They have water use data by county in 5-year intervals. By web scraping, we imported the data into R with 111 variables. After importing, we cleaned the data by eliminating the empty rows and columns, eliminating redundant data, and eliminating columns that contained only a hyphen or repeating 0s. After cleaning, we kept nine variables of interest. These variables are county, year, total population, public supply population served, public supply total withdrawals, domestic total withdrawals, domestic population, domestic deliveries from public supply, and irrigation total self supplied withdrawals. The clean usgs data was saved as usgs_clean. For a more in depth description of non-intuitive variables, see below:
+
+* Public supply total population served in thousands, represents the number of people who receive their water from public supply sources. 
+* Public supply total withdrawals represents the total amount of self-supplied water withdrawals for public supply in Colorado, specifically for fresh water. It is measured in million gallons per day (Mgal/d). Public supply systems are responsible for providing drinking water to communities, households, and various consumers. They may withdraw water from multiple sources (e.g., rivers, lakes, groundwater) for treatment and distribution to meet the water demand of the public. The water withdrawn under this category is intended for drinking, sanitation, and other public supply purposes.
+* Domestic total withdrawals represent the total volume of water withdrawn by domestic users (e.g., individual households or private wells) for their own use. Domestic users self-supply their water for their residential needs, such as drinking, household use, and irrigation. This category includes water withdrawals by private individuals or households from sources like private wells, rainwater harvesting, or other non-public supply sources. 
+* Domestic self-supplied population is expressed in thousands and represents the number of people who obtain their water from sources other than public supply systems. 
+* Domestic deliveries from public supply represents the volume of water delivered to households in Colorado from public water supply systems. It is measured in million gallons per day (Mgal/d) and indicates the quantity of water provided to residential consumers by public water.
+* Irrigation crop total withdrawals indicates the total amount of self-supplied water withdrawals for irrigation purposes in Colorado, specifically for crop irrigation with fresh water. It is measured in million gallons per day (Mgal/d) and represents the water used for agricultural irrigation in the region.
+
+### IRS Migration Data Processing
+From the IRS website, we downloaded 26 data sets, each containing migration data for a different year ranging from 1996-2021. The first step was defining new headers that matched the data within each column. After that, we sorted the data by what cleaning was needed and created functions for each type of cleaning. Thankfully, we were able to condense the cleaning into three functions that we applied to different subsets of data based on the type of cleaning required. All functions had the same basic structure, the parts of which are below:
+
+1. Deleted header rows that did not import correctly into R
+2. Filtered data to contain only county migration totals and deleted columns that were not relevant to our research questions
+3. Renamed headers to match leftover columns. This included the county, year, and individual_inflow (the amount of individuals who migrated into Colorado)
+4. Added a column that denotes what year the migration data is from
+5. Deleted rows that had to total for the state
+6. Deleted "county" and typos from the county name
+
+Then, we merged all the cleaned individual data files together, changed the year and inflow variables to numeric, deleted rows that had na values, and saved as migration_clean. After that, we merged the data set with the usgs_clean based on county and year. The clean and merged data set is saved as merged_data.RData 
+
+### Merged Dataset Description
+* **Year**: Year of observation
+* **County**: County of observation
+* **Total Population of Area, in Thousands**: Population in county, in thousands               
+* **Public Supply total population served, in thousands**: Population in county served by public supply water
+* **Public Supply total self-supplied withdrawals, fresh, in Mgal/d**: Water withdrawn for municipalities and provided by utilities for drinking, sanitation, and other public supply purposes 
+* **Domestic total self-supplied withdrawals, fresh, in Mgal/d**: Water withdrawals by private individuals or households from sources like private wells, rainwater harvesting, or other non-public supply sources
+* **Domestic self-supplied population, in thousands**: Number of people who obtain their water from sources other than public supply systems
+* **Domestic deliveries from public supply, in Mgal/d**: Water delivered to households in Colorado from public water supply systems
+* **Irrigation, Crop total self-supplied withdrawals for crops, fresh, in Mgal/d**: Water withdrawals for irrigation purposes
+* **Individuals_inflow**: Amount of individuals who migrated into Colorado
+
+### Transformations, Extreme Values, and Missing Values
+* Merging the clean migration and usgs data produced missing values because we had USGS data ranging back to 1885 while our migration data only went back to 1996. Hence, using the USGS data as a base and left joining the migration left years 1885, 1990, and 1995 without migration data. We chose to drop this values when doing analysis and just focus on county water use and migration in five year intervals from 2000, 2005, 2010, 2015. Therefor, our migration variable only has a 56% completion rate.
+  * During the next project step, we intend to take sum of the past five years and apply it to the year usgs year in question. This will help us use more encompassing migration data so we dont have to drop so many years of useful data.
+* Domestic deliveries from public supply has an 86% completion rate. We will ignore missing values for the sake of this analysis
+* Irrigation data is only reported for 2005, 2010, and 2015. Hence, there is a 43% completion rate. This is not ideal, however we will not analyze values that do not contain usable data.
+* We didn't need to apply any data transformations. This suggests that the variables our data sets were already in a format that suited my analysis objectives. 
+* There were no extreme values in our data sets
+
+
+
+## Findings and Visualizations
+
+### Finding 1
+
+Irrigation decreases over time. It's possible that the available land suitable for crop irrigation reached a saturation point, limiting further expansion. Agricultural practices and technology may have improved, leading to more efficient water use and a reduced need for additional withdrawals.
+
+```{r , echo=FALSE, warning=FALSE}
+ggplot(merged_data, aes(y = `Irrigation, Crop total self-supplied withdrawals for crops, fresh, in Mgal/d`, x = year)) +
+  geom_smooth() +
+  labs(title = "Crop Irrigation by Year for Colorado",
+       x = "Year",
+       y = "Irrigation  Mgal/d")
+```
+
+### Finding 2
+
+The scatterplot allows us to visualize the relationship between the Public Supply total self-supplied withdrawals, fresh, in Mgal/d and Year over time. As it's more flat line means it was decreasing and then become a more flat upward-sloping line. Which means, the public supply withdrawals was decreasing and then increases over the time. But it didn't increase in a faster way. The subsequent gradual increase suggests that, while the decline was not permanent, the increase in withdrawals did not occur at a rapid pace. This could be due to factors like slow population growth or the implementation of sustainable water management practices.
+
+```{r , echo=FALSE}
+ggplot(merged_data, aes(x = `Public Supply total self-supplied withdrawals, fresh, in Mgal/d`, y = year)) +
+  geom_smooth() +
+   labs(title = "Public Supply Withdrawals by Year for Colorado", 
+       x = "Year",
+       y = "Public Supply Mgal/d") 
+```
+
+### Finding 3
+
+The graph below shows the migration inflows from 1996 to 2015. We see that a majority of the counties in Colorado experience very low migration. However, there are 9 counties out of the 64 that see consistent migration over 10,000. We can also see a large overall dip in migration in 2015 and a spike in 2017. It would be really cool to see how much migration was effected by COVID-19 but unfortunately we only have data up to 2021. (In Progess: We are working on code to just show a legend for the highest counties)
+
+```{r , echo=FALSE, warning=FALSE}
+ggplot(migration_clean, aes(x = year, y = individuals_inflow, color = county)) +
+  geom_line(show.legend = FALSE) +
+  labs(title = "Migration by Year for Colorado Counties",
+       x = "Year",
+       y = "Migration")
+```
+
+### Finding 4
+
+From the graph below we can see that there is a linear relationship between year and migration inflows. This shows that there is a correlation between time increases and the amount of people migrating to Colorado.
+
+```{r , echo=FALSE, warning=FALSE}
+ggplot(migration_clean, aes(y = individuals_inflow, x = year)) +
+  geom_smooth() +
+  labs(title = "Migration by Year for Colorado",
+       x = "Year",
+       y = "Migration")
+```
+
+### Finding 5
+
+One finding of interest is that migration has a distinct linear relationship to public supply withdrawals. This shows that increased migration is correlated with an increase in fresh water withdrawals used to meet the water demand of communities and consumers. This relationship is rather intuitive but it is good to see our data coincides with our intuition. 
+
+```{r , echo=FALSE, warning=FALSE}
+ggplot(merged_data, aes(x = individuals_inflow, y = `Public Supply total self-supplied withdrawals, fresh, in Mgal/d`)) +
+  geom_smooth() +
+  labs(title = "Migration Inflows and Public Supply Withdrawals for Colorado", 
+       x = "Migration Inflows",
+       y = "Public Supply Mgal/d") 
+```
+
+### Finding 6
+
+Finding four includes a correlation between migration inflows and irrigation withdrawals. As inflows increase the amount of irrigation withdrawals decrease. 
+
+```{r , echo=FALSE, warning=FALSE}
+ggplot(merged_data, aes(x = individuals_inflow, y = `Irrigation, Crop total self-supplied withdrawals for crops, fresh, in Mgal/d`)) +
+  geom_smooth() +
+  labs(title = "Migration Inflows and Irrigation Crop Withdrawals for Colorado", 
+       x = "Migration Inflows",
+       y = "Irrigation Withdrawals Mgal/d") 
+```
+
+Next Steps
+
+* Spatially visualize what counties have the most public supply water use
+* Incorporate lagged migration data. Sum 5 years before and then merge with USGS data
+* Working on code to show a legend for the highest counties in finding 3
+
+
+
+  
+  
