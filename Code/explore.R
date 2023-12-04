@@ -83,7 +83,8 @@ ggplot(merged_data, aes(x = ln_inflow, y = ln_public_supply)) +
 
 
 
-
+ggplot(migration_clean, aes(x = year, y = inflow, color = county)) +
+  geom_area()
 
 
 

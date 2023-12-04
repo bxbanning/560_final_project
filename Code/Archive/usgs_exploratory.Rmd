@@ -1,0 +1,92 @@
+---
+title: "usgs_exploratory"
+author: "Farzana Sarker"
+date: "2023-11-01"
+output: html_document
+---
+
+#Processing USGS_cleaning Data 
+We made advantage of the website's USGS water data. The data we used was available on the website, and in order to import the data into R, we must continue with the data wrangling. There were 111 variables in the data set that had no bearing on our research, therefore we cleaned it using the data cleaning list. We eliminate the empty rows and columns, for instance. Additionally, we eliminate redundant data. We eliminated certain columns since they included simply a hyphen or the number 0 instead of any values. Once more, we just needed a portion of the final 106 variables for our project; we didn't need them all. We eliminate the columns and variables that won't be useful for our project. In the end, we have nine variables, and our analysis will be conducted using them. 
+
+#Transformation and Missing values 
+In our dataset, it's worth noting that we were fortunate not to encounter extensive missing values, and we've opted to simply drop the few missing data points during our analysis. This  is appropriate when dealing with minimal missing data, as it ensures that we are working with complete and accurate information without the need for complex imputation methods. By doing this, we are maintain the integrity of your dataset and avoid introducing potential bias through imputed values.
+Furthermore, we didn't need to apply any data transformations. This suggests that the variables in my dataset were already in a format that suited my analysis objectives. 
+
+
+#Explain the variables name
+County has all of the county names in the Colorado. Where year represent the year for which the data is recorded. It indicates the specific year of the dataset. Here we use the data from 1985 to 2015. Total Population of Area, in Thousands is a measure of the number of residents in the region and it is expressed in thousands. Public Supply total population served, in thousands represents the number of people who receive their water from public supply sources. Public Supply total self-supplied withdrawals, fresh, in Mgal/d, this variable represents the total amount of self-supplied water withdrawals for public supply purposes in Colorado, specifically for fresh water. It is measured in million gallons per day (Mgal/d). Public supply systems are responsible for providing drinking water to communities, households, and various consumers and may withdraw water from various sources (e.g., rivers, lakes, groundwater) for treatment and distribution to meet the water demand of the public. The water withdrawn under this category is intended for drinking, sanitation, and other public supply purposes. On the other hand, Domestic total self-supplied withdrawals, fresh, in Mgal/d, represents the total volume of water withdrawn by domestic users (e.g., individual households or private wells) for their own use.Domestic users self-supply their water for their residential needs, such as drinking, household use, and irrigation. This category includes water withdrawals by private individuals or households from sources like private wells, rainwater harvesting, or other non-public supply sources. The water withdrawn under this category is typically used for household and personal needs, including drinking, bathing, and domestic purposes. Domestic self-supplied population, in thousands is expressed in thousands and represents the number of people who obtain their water from sources other than public supply systems. Domestic deliveries from public supply, in Mgal/d represents the volume of water delivered to households in Colorado from public water supply systems. It is measured in million gallons per day (Mgal/d) and indicates the quantity of water provided to residential consumers by public water. Irrigation, Crop total self-supplied withdrawals for crops, fresh, in Mgal/d indicates the total amount of self-supplied water withdrawals for irrigation purposes in Colorado, specifically for crop irrigation with fresh water. It is measured in million gallons per day (Mgal/d) and represents the water used for agricultural irrigation in the region.
+
+#Necessary Packages
+library(httr)
+library(tidyverse)
+library(rvest)
+library(dplyr)
+library(knitr)
+library(stringr)
+library(pander)
+
+```{r }
+Water_data <- read.csv("/Users/farzanamahin/Library/CloudStorage/OneDrive-MontanaStateUniversity/560 - Final Project/Clean/usgs_clean.csv")
+```
+
+```{r }
+#Variables names are misplaced with . rather than space which I would like to correct here. 
+new_colnames <- gsub("\\.", " ", colnames(Water_data))
+colnames(Water_data) <- new_colnames
+```
+
+```{r }
+variable_names <- names(Water_data)
+print(variable_names)
+```
+
+#providing the scatter plot for the variables
+```{r }
+#Relationship between Public Supply total population served and year. 
+ggplot(Water_data, aes(x = `Public Supply total population served, in thousands`, y = year)) +
+  geom_smooth()
+```
+#The scatterplot with the smoothed line allows us to visualize the relationship between the "Public Supply total population served, in thousands" and "Year" over time.As it's an upward-sloping line, it suggests an increasing trend in population served by public supply systems over the years. And from this trend, it is predicted to increase more in the coming future with the increasing population.
+
+
+```{r }
+#Relationship between Public Supply total self-supplied withdrawals and year. 
+ggplot(Water_data, aes(x = `Public Supply total self-supplied withdrawals, fresh, in Mgal/d`, y = year)) +
+  geom_smooth()
+```
+#The scatterplot allows us to visualize the relationship between the Public Supply total self-supplied withdrawals, fresh, in Mgal/d and Year over time.As it's more flat line means it was decreasing and then become a more flat upward-sloping line. Which means, the public supply withdrawals was decreasing and then increases over the time. But it didn't increase in a faster way. The subsequent gradual increase suggests that, while the decline was not permanent, the increase in withdrawals did not occur at a rapid pace. This could be due to factors like slow population growth or the implementation of sustainable water management practices.
+
+
+```{r }
+#Relationship between Domestic total self-supplied withdrawals and year. 
+ggplot(Water_data, aes(x = `Domestic total self-supplied withdrawals, fresh, in Mgal/d`, y = year)) +
+  geom_smooth()
+```
+#It shows us that the line was more flatter and close to constant but now it tends to decrease over the time. The decreasing trend in "Domestic total self-supplied withdrawals, fresh, in Mgal/d" over the years suggests that there has been a gradual reduction in self-supplied domestic water withdrawals. Possible explanations for this trend could include increased water efficiency measures, changes in domestic water use habits, or improvements in water conservation practices. This trend may be an indicator of successful water conservation efforts or increased awareness of the importance of sustainable water use in domestic settings.
+
+
+```{r }
+#Relationship between Irrigation, Crop total self-supplied withdrawals for crops and year. 
+ggplot(Water_data, aes(x = `Irrigation, Crop total self-supplied withdrawals for crops, fresh, in Mgal/d`, y = year)) +
+  geom_smooth()
+```
+#Usually the curve is flatter over the year. There might have few reasons for the flatter curve. It's possible that the available land suitable for crop irrigation reached a saturation point, limiting further expansion.Again, agricultural practices and technology may have improved, leading to more efficient water use and a reduced need for additional withdrawals.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

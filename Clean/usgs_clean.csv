@@ -1,4 +1,4 @@
-"","county","year","Total Population of Area, in Thousands","Public Supply total population served, in thousands","Public Supply total self-supplied withdrawals, fresh, in Mgal/d","Domestic total self-supplied withdrawals, fresh, in Mgal/d","Domestic self-supplied population, in thousands","Domestic deliveries from public supply, in Mgal/d","Irrigation, Crop total self-supplied withdrawals for crops, fresh, in Mgal/d"
+"","county","year","population","public_supply_pop","withdrawals_public","withdrawals_domestic","pop_domestic","deliveries_domestic","withdrawals_irrigation"
 "1","Adams",1985,276.47,267.9,54.75,0.64,8.57,"35.850",NA
 "2","Adams",1990,265.04,254.77,46.85,0.78,10.27,"33.940",NA
 "3","Adams",1995,303.3,289.22,47.55,1.06,14.08,"36.390",NA

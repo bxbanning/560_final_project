@@ -53,7 +53,6 @@ summary(water_data8)
 
 
 #Replace some of the names in my Dataset Correctly
-
 water_data8 <- water_data8 |>
   rename("Total Population of Area, in Thousands" = "Total Population total population of area, in thousands")
 
@@ -71,6 +70,33 @@ water_data8[water_data8 == "-"] <- NA
 water_data8$`County Name` <- str_replace(water_data8$`County Name`, " County", "")
 water_data8 <- water_data8 %>% 
   rename(county = `County Name`, year = Year)
+
+# Print the list of column names
+column_names <- colnames(water_data8)
+print(column_names)
+
+
+#Replace some of the names in my Dataset Correctly
+water_data8 <- water_data8 |>
+  rename("Total Population" = "Total Population of Area, in Thousands")
+
+water_data8 <- water_data8 |>
+  rename("Public Supply" = "Public Supply total population served, in thousands" )
+
+water_data8 <- water_data8 |>
+  rename("Self-Supplied Withdrawals" = "Public Supply total self-supplied withdrawals, fresh, in Mgal/d"  )
+
+water_data8 <- water_data8 |>
+  rename("Domestic Self Supplied Withdrawals" = "Domestic total self-supplied withdrawals, fresh, in Mgal/d")
+
+water_data8 <- water_data8 |>
+  rename("Domestic Population" = "Domestic self-supplied population, in thousands"  )
+
+water_data8 <- water_data8 |>
+  rename("Domestic Deliveries" = "Domestic deliveries from public supply, in Mgal/d" )
+
+water_data8 <- water_data8 |>
+  rename("Irrigation" = "Irrigation, Crop total self-supplied withdrawals for crops, fresh, in Mgal/d" )
 
 #save cleaned data
 write.csv(water_data8, "Clean/usgs_clean.csv")
